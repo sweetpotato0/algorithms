@@ -17,7 +17,7 @@ func New(space int) *Stack {
 		panic(errors.New("space must be more than 0."))
 	}
 	return &Stack{
-		data:   make([]interface{}, 0),
+		data:   make([]interface{}, space),
 		length: 0,
 		space:  space,
 	}
@@ -32,29 +32,28 @@ func (s *Stack) isEmpty() bool {
 }
 
 func (s *Stack) Push(value interface{}) error {
+	defer s.Unlock()
+	s.Lock()
+
 	if s.length >= s.space {
 		return errors.New("Stack is full.")
 	}
-
-	s.Lock()
-	s.data = append(s.data, value)
+	s.data[s.length] = value
 	s.length++
-	s.Unlock()
 
 	return nil
 }
 
 func (s *Stack) Pop() (value interface{}, err error) {
+	defer s.Unlock()
+	s.Lock()
+
 	if s.isEmpty() {
 		return nil, errors.New("Stack is empty.")
 	}
-	n := s.Len()
-
-	s.Lock()
-	value = s.data[n-1]
-	s.data = s.data[:n-1]
+	value = s.data[s.length-1]
+	s.data = s.data[:s.length-1]
 	s.length--
-	s.Unlock()
 
 	return value, nil
 }

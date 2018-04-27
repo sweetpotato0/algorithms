@@ -17,7 +17,7 @@ func New(space int) *Queue {
 		panic(errors.New("space must be more than 0."))
 	}
 	return &Queue{
-		data:   make([]interface{}, 0),
+		data:   make([]interface{}, space),
 		length: 0,
 		space:  space,
 	}
@@ -28,32 +28,31 @@ func (q *Queue) Len() int {
 }
 
 func (q *Queue) isEmpty() bool {
-	return q.Len() == 0
+	return q.length == 0
 }
 
 func (q *Queue) Push(value interface{}) error {
+	defer q.Unlock()
+	q.Lock()
+
 	if q.length >= q.space {
 		return errors.New("Queue is full.")
 	}
-
-	q.Lock()
-	q.data = append(q.data, value)
+	q.data[q.length] = value
 	q.length++
-	q.Unlock()
 
 	return nil
 }
 
 func (q *Queue) Pop() (value interface{}, err error) {
+	defer q.Unlock()
+	q.Lock()
 
 	if q.isEmpty() {
 		return nil, errors.New("Queue is empty.")
 	}
-
-	q.Lock()
 	value, q.data = q.data[0], q.data[:1]
 	q.length--
-	q.Unlock()
 
 	return value, nil
 }
